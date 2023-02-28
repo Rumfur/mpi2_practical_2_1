@@ -2,6 +2,7 @@ package com.example.practical_2_1
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -85,7 +86,10 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    fun onAudio(){}
+    fun onAudio(){
+        val intent = Intent(this@MainActivity, AudioActivity::class.java)
+        startActivity(intent)
+    }
     fun onShow(){}
     fun onDelete(){}
 
