@@ -21,6 +21,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.core.Preview
 import androidx.camera.core.CameraSelector
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -67,6 +69,25 @@ class MainActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.sub_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when(item.itemId){
+            R.id.audio_option -> onAudio()
+            R.id.show_option -> onShow()
+            R.id.delete_option -> onDelete()
+        }
+        return true
+    }
+
+    fun onAudio(){}
+    fun onShow(){}
+    fun onDelete(){}
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
