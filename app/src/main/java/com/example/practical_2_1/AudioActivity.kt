@@ -8,14 +8,19 @@ import android.view.MenuItem
 import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 
 class AudioActivity : AppCompatActivity() {
 
     val MICROPHONE_PERMISION_CODE = 200
+    private lateinit var analytics: FirebaseAnalytics
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
+        analytics = Firebase.analytics
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -26,14 +31,20 @@ class AudioActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when(item.itemId){
-            R.id.image_option -> onAudio()
+            R.id.image_option -> onImage()
             R.id.delete_option -> onDelete()
         }
         return true
     }
+// For Record button
+//    analytics.logEvent("audio_record_started", null)
+// For saving record
+//    analytics.logEvent("audio_record_saved", null)
 
-    fun onAudio(){}
-    fun onDelete(){}
+    fun onImage(){}
+    fun onDelete(){
+        analytics.logEvent("audio_record_deleted", null)
+    }
 
     public fun startRecording(v: View) {
 
