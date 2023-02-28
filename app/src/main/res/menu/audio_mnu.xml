@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/image_option"
-        android:title="Image" />
+        android:title="@string/image" />
     <item
         android:id="@+id/delete_option"
         android:title="@string/delete" />
