@@ -1,6 +1,7 @@
 package com.example.practical_2_1
 
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -48,7 +49,10 @@ class AudioActivity : AppCompatActivity() {
         return true
     }
 
-    fun onImage(){}
+    fun onImage(){
+        val intent = Intent(this@AudioActivity, MainActivity::class.java)
+        startActivity(intent)
+    }
 
 
     fun onDelete(){
