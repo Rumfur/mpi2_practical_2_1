@@ -1,10 +1,10 @@
 package com.example.practical_2_1
 
 import android.content.pm.PackageManager
-import android.media.MediaRecorder
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -17,6 +17,23 @@ class AudioActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audio)
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.audio_mnu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when(item.itemId){
+            R.id.image_option -> onAudio()
+            R.id.delete_option -> onDelete()
+        }
+        return true
+    }
+
+    fun onAudio(){}
+    fun onDelete(){}
 
     public fun startRecording(v: View) {
 

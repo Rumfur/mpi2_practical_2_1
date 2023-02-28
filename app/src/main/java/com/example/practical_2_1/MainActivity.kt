@@ -23,9 +23,7 @@ import androidx.camera.core.CameraSelector
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.MediaStoreOutputOptions
 import androidx.camera.video.Quality
@@ -33,7 +31,6 @@ import androidx.camera.video.QualitySelector
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.PermissionChecker
 import com.example.practical_2_1.databinding.ActivityMainBinding
-import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -71,7 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.sub_menu, menu)
+        menuInflater.inflate(R.menu.camera_menu, menu)
         return true
     }
 
