@@ -1,43 +1,39 @@
 package com.example.practical_2_1
 
+//import com.android.example.cameraxapp.databinding.ActivityMainBinding
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.database.Cursor
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-//import com.android.example.cameraxapp.databinding.ActivityMainBinding
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import android.widget.Toast
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.core.Preview
-import androidx.camera.core.CameraSelector
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.video.FallbackStrategy
-import androidx.camera.video.MediaStoreOutputOptions
-import androidx.camera.video.Quality
-import androidx.camera.video.QualitySelector
-import androidx.camera.video.VideoRecordEvent
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.loader.content.CursorLoader
 import com.example.practical_2_1.databinding.ActivityMainBinding
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
+import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -86,12 +82,87 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    private fun getRealPathFromURI(contentUri: Uri): String? {
+        val proj = arrayOf(MediaStore.Images.Media.DATA)
+        val loader = CursorLoader(this@MainActivity, contentUri, proj, null, null, null)
+        val cursor: Cursor? = loader.loadInBackground()
+        val column_index: Int = (cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DATA) ?: cursor?.moveToFirst()) as Int
+        val result: String = (cursor?.getString(column_index) ?: cursor?.close()) as String
+        return result
+    }
+
     fun onAudio(){
         val intent = Intent(this@MainActivity, AudioActivity::class.java)
         startActivity(intent)
     }
     fun onShow(){}
-    fun onDelete(){}
+    fun onDelete(){
+        val sp: SharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+        val editor = sp.edit()
+
+
+        val new_arr = sp.getString("img_paths", null)?.split(",")?.toTypedArray()
+
+
+        if (new_arr != null) {
+            for (item in new_arr){
+                Toast.makeText(this,
+                    item,
+                    Toast.LENGTH_SHORT).show()
+                val file = File(item)
+                if (file.exists()) {
+                    if (file.delete()) {
+                        Toast.makeText(this,
+                            "file Deleted ",
+                            Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this,
+                            "file not Deleted :",
+                            Toast.LENGTH_SHORT).show()
+                    }
+                }
+                Toast.makeText(this,
+                    "rip bozo",
+                    Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        editor.putString("img_paths", null)
+        editor.apply()
+        Toast.makeText(this,
+            "$sp.getString(\"img_paths\", null)",
+            Toast.LENGTH_SHORT).show()
+
+//        val file = File(MediaStore.Images.Media.RELATIVE_PATH + "Pictures/CameraX-Image")
+//        if (file.exists()) {
+//            val deleteCmd = "rm -r " + path
+//            val runtime = Runtime.getRuntime()
+//            try {
+//                runtime.exec(deleteCmd)
+//            } catch (e: IOException) {
+//            }
+//        }
+//        Toast.makeText(this,
+//            "rip bozo",
+//           Toast.LENGTH_SHORT).show()
+
+//        var path_name = "content://media/external/Pictures/CameraX-Image"
+//        val fdelete =
+//        if (fdelete.exists()) {
+//            if (fdelete.delete()) {
+//                Toast.makeText(this,
+//                    "file Deleted :$path_name",
+//                    Toast.LENGTH_SHORT).show()
+//            } else {
+//                Toast.makeText(this,
+//                    "file not Deleted :$path_name",
+//                    Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//        Toast.makeText(this,
+//            "$path_name",
+//            Toast.LENGTH_SHORT).show()
+    }
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
@@ -125,9 +196,22 @@ class MainActivity : AppCompatActivity() {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
 
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
-                    val msg = "Photo capture succeeded: ${output.savedUri}"
+                @SuppressLint("CommitPrefEdits")
+                override fun onImageSaved(output: ImageCapture.OutputFileResults){
+                    var msg = "${output.savedUri}"
+                    msg = msg.split("//media")[1]
+                    val sp: SharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                    val editor =  sp.edit()
+                    val existing_img = sp.getString("img_paths",null)
+                    if (existing_img != null){
+                        editor.putString("img_paths","$existing_img,$msg" )
+                        editor.apply()
+                    }else{
+                        editor.putString("img_paths","$msg" )
+                        editor.apply()
+                    }
+
+                    // ToDo: Save this to array and on delete just go trough array and delete everything
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
                 }
