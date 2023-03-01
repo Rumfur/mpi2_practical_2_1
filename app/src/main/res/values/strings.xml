@@ -6,7 +6,8 @@
     <string name="stop_capture">Stop Capture</string>
     <string name="start_recording">Start Recording</string>
     <string name="stop_recording">Stop Recording</string>
-    <string name="play_recording">Play Recording</string>
+    <string name="play_recording">Play Last Recording</string>
+    <string name="display_recording">Display Files</string>
     <string name="audio">Audio</string>
     <string name="show">Show</string>
     <string name="delete">Delete</string>
