@@ -60,6 +60,14 @@ class AudioActivity : AppCompatActivity() {
     }
 
     private fun onDelete(){
+        val contextWrapper = ContextWrapper(applicationContext)
+        for (file in File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!) {
+            if (!file.isDirectory) {
+                file.delete()
+            }
+        }
+        Toast.makeText(baseContext, "Audio files have been deleted", Toast.LENGTH_SHORT).show()
+
         analytics.logEvent("audio_record_deleted", null)
     }
 
@@ -83,18 +91,27 @@ class AudioActivity : AppCompatActivity() {
     }
 
     fun playRecording(v: View) {
-        mediaPlayer = MediaPlayer()
-        mediaPlayer.setDataSource(getRecordingFilePath())
-        mediaPlayer.prepare()
-        mediaPlayer.start()
-        Toast.makeText(this, "Playing audio!", Toast.LENGTH_SHORT).show()
+        val contextWrapper: ContextWrapper = ContextWrapper(applicationContext)
+        if (contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)?.list()?.isNotEmpty() == true){
+            val sp = getSharedPreferences("PREFERENCE_NAME", Context.MODE_PRIVATE)
+            val contextWrapper = ContextWrapper(applicationContext)
+            val musicDirectory: File = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!
+            mediaPlayer = MediaPlayer()
+            var audioList = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!
+            mediaPlayer.setDataSource(audioList[audioList.size-1].path)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+            Toast.makeText(this, "Playing audio!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "No audio to play!", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     fun displayRecordedAudio(v: View){
         val contextWrapper: ContextWrapper = ContextWrapper(applicationContext)
         val files = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).list()
         val a = ArrayAdapter(this, android.R.layout.simple_list_item_1, files)
-
         val listView = findViewById<ListView>(R.id.audioDisplay)
         listView.setAdapter(a)
     }

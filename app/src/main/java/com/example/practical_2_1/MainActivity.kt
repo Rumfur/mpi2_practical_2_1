@@ -13,6 +13,8 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
+import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -24,6 +26,9 @@ import androidx.camera.video.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.core.graphics.drawable.toIcon
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.documentfile.provider.DocumentFile
 import com.example.practical_2_1.databinding.ActivityMainBinding
 import java.io.File
@@ -42,15 +47,13 @@ class MainActivity : AppCompatActivity() {
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
     val uri_arr = mutableListOf<Uri>()
-
+    private var displayImage = false
     private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-
-        // Request camera permissions
         if (allPermissionsGranted()) {
             startCamera()
         } else {
@@ -58,11 +61,8 @@ class MainActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
             )
         }
-
-        // Set up the listeners for take photo and video capture buttons
         viewBinding.imageCaptureButton.setOnClickListener { takePhoto() }
         viewBinding.videoCaptureButton.setOnClickListener { captureVideo() }
-
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
@@ -86,7 +86,10 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    fun onShow() {}
+    fun onShow() {
+        Toast.makeText(baseContext, "Sorry, this does not work :(", Toast.LENGTH_SHORT).show()
+    }
+
     fun onDelete() {
         for(i in uri_arr){
             this@MainActivity.contentResolver.delete(i, null, null)
@@ -97,9 +100,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun takePhoto() {
-        // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
-        // Create time stamped name and MediaStore entry.
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
@@ -109,14 +110,12 @@ class MainActivity : AppCompatActivity() {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
             }
         }
-        // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
             .Builder(contentResolver,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
             .build()
 
-        // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
@@ -124,7 +123,6 @@ class MainActivity : AppCompatActivity() {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
-
                 @SuppressLint("CommitPrefEdits")
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     output.savedUri?.let { uri_arr.add(it) }
@@ -138,7 +136,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // Implements VideoCapture use case, including start and stop capturing.
     private fun captureVideo() {
         val videoCapture = this.videoCapture ?: return
 
@@ -146,13 +143,11 @@ class MainActivity : AppCompatActivity() {
 
         val curRecording = recording
         if (curRecording != null) {
-            // Stop the current recording session.
             curRecording.stop()
             recording = null
             return
         }
 
-        // create and start a new recording session
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
@@ -209,12 +204,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
         cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Preview
             val preview = Preview.Builder()
                 .build()
                 .also {
@@ -228,36 +219,18 @@ class MainActivity : AppCompatActivity() {
 
             imageCapture = ImageCapture.Builder().build()
 
-            /*
-            val imageAnalyzer = ImageAnalysis.Builder().build()
-                .also {
-                    setAnalyzer(
-                        cameraExecutor,
-                        LuminosityAnalyzer { luma ->
-                            Log.d(TAG, "Average luminosity: $luma")
-                        }
-                    )
-                }
-            */
-
-            // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
-                // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
-
-                // Bind use cases to camera
                 cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture, videoCapture)
-
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
     }
-
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
