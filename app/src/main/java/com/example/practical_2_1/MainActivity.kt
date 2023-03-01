@@ -5,9 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -26,7 +24,7 @@ import androidx.camera.video.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import androidx.loader.content.CursorLoader
+import androidx.documentfile.provider.DocumentFile
 import com.example.practical_2_1.databinding.ActivityMainBinding
 import java.io.File
 import java.text.SimpleDateFormat
@@ -41,9 +39,9 @@ typealias LumaListener = (luma: Double) -> Unit
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private var imageCapture: ImageCapture? = null
-
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
+    val uri_arr = mutableListOf<Uri>()
 
     private lateinit var cameraExecutor: ExecutorService
 
@@ -57,7 +55,8 @@ class MainActivity : AppCompatActivity() {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
+            )
         }
 
         // Set up the listeners for take photo and video capture buttons
@@ -74,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-        when(item.itemId){
+        when (item.itemId) {
             R.id.audio_option -> onAudio()
             R.id.show_option -> onShow()
             R.id.delete_option -> onDelete()
@@ -82,92 +81,24 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun getRealPathFromURI(contentUri: Uri): String? {
-        val proj = arrayOf(MediaStore.Images.Media.DATA)
-        val loader = CursorLoader(this@MainActivity, contentUri, proj, null, null, null)
-        val cursor: Cursor? = loader.loadInBackground()
-        val column_index: Int = (cursor?.getColumnIndexOrThrow(MediaStore.Images.Media.DATA) ?: cursor?.moveToFirst()) as Int
-        val result: String = (cursor?.getString(column_index) ?: cursor?.close()) as String
-        return result
-    }
-
-    fun onAudio(){
+    fun onAudio() {
         val intent = Intent(this@MainActivity, AudioActivity::class.java)
         startActivity(intent)
     }
-    fun onShow(){}
-    fun onDelete(){
-        val sp: SharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-        val editor = sp.edit()
 
-
-        val new_arr = sp.getString("img_paths", null)?.split(",")?.toTypedArray()
-
-
-        if (new_arr != null) {
-            for (item in new_arr){
-                Toast.makeText(this,
-                    item,
-                    Toast.LENGTH_SHORT).show()
-                val file = File(item)
-                if (file.exists()) {
-                    if (file.delete()) {
-                        Toast.makeText(this,
-                            "file Deleted ",
-                            Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this,
-                            "file not Deleted :",
-                            Toast.LENGTH_SHORT).show()
-                    }
-                }
-                Toast.makeText(this,
-                    "rip bozo",
-                    Toast.LENGTH_SHORT).show()
-            }
+    fun onShow() {}
+    fun onDelete() {
+        for(i in uri_arr){
+            this@MainActivity.contentResolver.delete(i, null, null)
+            // Make sure your gallery is closed on your phone, or else crash :)
         }
-
-        editor.putString("img_paths", null)
-        editor.apply()
-        Toast.makeText(this,
-            "$sp.getString(\"img_paths\", null)",
-            Toast.LENGTH_SHORT).show()
-
-//        val file = File(MediaStore.Images.Media.RELATIVE_PATH + "Pictures/CameraX-Image")
-//        if (file.exists()) {
-//            val deleteCmd = "rm -r " + path
-//            val runtime = Runtime.getRuntime()
-//            try {
-//                runtime.exec(deleteCmd)
-//            } catch (e: IOException) {
-//            }
-//        }
-//        Toast.makeText(this,
-//            "rip bozo",
-//           Toast.LENGTH_SHORT).show()
-
-//        var path_name = "content://media/external/Pictures/CameraX-Image"
-//        val fdelete =
-//        if (fdelete.exists()) {
-//            if (fdelete.delete()) {
-//                Toast.makeText(this,
-//                    "file Deleted :$path_name",
-//                    Toast.LENGTH_SHORT).show()
-//            } else {
-//                Toast.makeText(this,
-//                    "file not Deleted :$path_name",
-//                    Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//        Toast.makeText(this,
-//            "$path_name",
-//            Toast.LENGTH_SHORT).show()
+        Toast.makeText(baseContext, "Images have been deleted", Toast.LENGTH_SHORT).show()
     }
+
 
     private fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
-
         // Create time stamped name and MediaStore entry.
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
@@ -178,7 +109,6 @@ class MainActivity : AppCompatActivity() {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
             }
         }
-
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
             .Builder(contentResolver,
@@ -186,8 +116,7 @@ class MainActivity : AppCompatActivity() {
                 contentValues)
             .build()
 
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
+        // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
@@ -198,22 +127,12 @@ class MainActivity : AppCompatActivity() {
 
                 @SuppressLint("CommitPrefEdits")
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
-                    var msg = "${output.savedUri}"
-                    msg = msg.split("//media")[1]
-                    val sp: SharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                    val editor =  sp.edit()
-                    val existing_img = sp.getString("img_paths",null)
-                    if (existing_img != null){
-                        editor.putString("img_paths","$existing_img,$msg" )
-                        editor.apply()
-                    }else{
-                        editor.putString("img_paths","$msg" )
-                        editor.apply()
-                    }
-
-                    // ToDo: Save this to array and on delete just go trough array and delete everything
+                    output.savedUri?.let { uri_arr.add(it) }
+                    var msg = output.savedUri?.path
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
+                    if (msg != null) {
+                        Log.d(TAG, msg)
+                    }
                 }
             }
         )
