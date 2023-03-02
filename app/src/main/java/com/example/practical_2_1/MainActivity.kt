@@ -1,6 +1,7 @@
 package com.example.practical_2_1
 
 //import com.android.example.cameraxapp.databinding.ActivityMainBinding
+import ImageViewer
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -42,13 +43,14 @@ typealias LumaListener = (luma: Double) -> Unit
 
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var viewBinding: ActivityMainBinding
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
-    val uri_arr = mutableListOf<Uri>()
     private var displayImage = false
     private lateinit var cameraExecutor: ExecutorService
+    var uri_arr = ArrayList<Uri>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +90,9 @@ class MainActivity : AppCompatActivity() {
 
     fun onShow() {
         Toast.makeText(baseContext, "Sorry, this does not work :(", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this@MainActivity, ImageViewer::class.java)
+        intent.putExtra("arr",uri_arr)
+        startActivity(intent)
     }
 
     fun onDelete() {
