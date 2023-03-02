@@ -14,8 +14,6 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ImageView
-import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -27,20 +25,11 @@ import androidx.camera.video.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import androidx.core.graphics.drawable.toIcon
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
-import androidx.documentfile.provider.DocumentFile
 import com.example.practical_2_1.databinding.ActivityMainBinding
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-
-
-typealias LumaListener = (luma: Double) -> Unit
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,9 +37,8 @@ class MainActivity : AppCompatActivity() {
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
-    private var displayImage = false
     private lateinit var cameraExecutor: ExecutorService
-    var uri_arr = ArrayList<Uri>()
+    var uriArr = ArrayList<Uri>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,20 +71,20 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    fun onAudio() {
+    private fun onAudio() {
         val intent = Intent(this@MainActivity, AudioActivity::class.java)
         startActivity(intent)
     }
 
-    fun onShow() {
+    private fun onShow() {
         Toast.makeText(baseContext, "Sorry, this does not work :(", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this@MainActivity, ImageViewer::class.java)
-        intent.putExtra("arr",uri_arr)
-        startActivity(intent)
+//      val intent = Intent(this@MainActivity, ImageViewer::class.java)
+//      intent.putExtra("arr",uriArr)
+//      startActivity(intent)
     }
 
-    fun onDelete() {
-        for(i in uri_arr){
+    private fun onDelete() {
+        for(i in uriArr){
             this@MainActivity.contentResolver.delete(i, null, null)
             // Make sure your gallery is closed on your phone, or else crash :)
         }
@@ -130,8 +118,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 @SuppressLint("CommitPrefEdits")
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
-                    output.savedUri?.let { uri_arr.add(it) }
-                    var msg = output.savedUri?.path
+                    output.savedUri?.let { uriArr.add(it) }
+                    val msg = output.savedUri?.path
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     if (msg != null) {
                         Log.d(TAG, msg)

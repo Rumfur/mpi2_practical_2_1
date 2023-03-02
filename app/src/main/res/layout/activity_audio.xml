@@ -14,10 +14,10 @@
         android:layout_height="110dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="50dp"
-        android:backgroundTint="#000000"
         android:elevation="2dp"
         android:onClick="startRecording"
         android:text="@string/start_recording"
+        android:backgroundTint="#000000"
         android:textColor="#FFFFFF"
         app:iconTint="#FFFFFF"
         app:icon="@android:drawable/ic_btn_speak_now"
@@ -26,10 +26,27 @@
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <Button
-        android:id="@+id/audio_play"
+        android:id="@+id/audioLeft"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="124dp"
+        android:layout_marginBottom="228dp"
+        android:backgroundTint="#000000"
+        android:elevation="2dp"
+        android:onClick="selectPreviousRecording"
+        android:textColor="#FFFFFF"
+        app:icon="@android:drawable/arrow_down_float"
+        app:iconTint="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/vertical_centerline"
+        app:layout_constraintLeft_toLeftOf="parent"
+        tools:ignore="SpeakableTextPresentCheck" />
+
+    <Button
+        android:id="@+id/audio_display"
         android:layout_width="150dp"
         android:layout_height="60dp"
-        android:layout_marginLeft="128dp"
+        android:layout_marginStart="128dp"
         android:layout_marginBottom="344dp"
         android:backgroundTint="#000000"
         android:elevation="2dp"
@@ -41,10 +58,10 @@
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <Button
-        android:id="@+id/audio_display"
+        android:id="@+id/audio_play"
         android:layout_width="200dp"
         android:layout_height="110dp"
-        android:layout_marginLeft="104dp"
+        android:layout_marginStart="104dp"
         android:layout_marginBottom="196dp"
         android:backgroundTint="#000000"
         android:elevation="2dp"
@@ -71,6 +88,22 @@
         app:iconTint="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/vertical_centerline" />
+
+    <Button
+        android:id="@+id/audioRight"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="124dp"
+        android:layout_marginBottom="228dp"
+        android:backgroundTint="#000000"
+        android:elevation="2dp"
+        android:onClick="selectNextRecording"
+        android:textColor="#FFFFFF"
+        app:icon="@android:drawable/arrow_up_float"
+        app:iconTint="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/vertical_centerline"
+        tools:ignore="SpeakableTextPresentCheck" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_centerline"

@@ -1,9 +1,9 @@
 package com.example.practical_2_1
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -13,6 +13,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -26,7 +27,8 @@ import java.io.File
 
 class AudioActivity : AppCompatActivity() {
 
-    private val MICROPHONE_PERMISION_CODE = 200
+    private val microphonePermissionCode = 200
+    private var selectedAudioID = 0
     private lateinit var analytics: FirebaseAnalytics
     private lateinit var mediaRecorder: MediaRecorder
     private lateinit var mediaPlayer: MediaPlayer
@@ -41,7 +43,7 @@ class AudioActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.audio_mnu, menu)
+        menuInflater.inflate(R.menu.audio_menu, menu)
         return true
     }
 
@@ -90,15 +92,52 @@ class AudioActivity : AppCompatActivity() {
         analytics.logEvent("audio_record_saved", null)
     }
 
-    fun playRecording(v: View) {
-        val contextWrapper: ContextWrapper = ContextWrapper(applicationContext)
+    @SuppressLint("SetTextI18n")
+    fun selectPreviousRecording(v: View) {
+        val contextWrapper = ContextWrapper(applicationContext)
         if (contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)?.list()?.isNotEmpty() == true){
-            val sp = getSharedPreferences("PREFERENCE_NAME", Context.MODE_PRIVATE)
-            val contextWrapper = ContextWrapper(applicationContext)
-            val musicDirectory: File = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!
+            val audioList = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!
+            val audioCount = audioList.size
+            if (selectedAudioID - 1 >= 0) {
+                selectedAudioID -= 1
+            } else {
+                selectedAudioID = audioCount - 1
+            }
+            updatePlayButtonText(audioList)
+        } else {
+            Toast.makeText(this, "No audio to play!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun selectNextRecording(v: View) {
+        val contextWrapper = ContextWrapper(applicationContext)
+        if (contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)?.list()?.isNotEmpty() == true){
+            val audioList = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!
+            val audioCount = audioList.size
+            if (selectedAudioID + 1 < audioCount) {
+                selectedAudioID += 1
+            } else {
+                selectedAudioID = 0
+            }
+            updatePlayButtonText(audioList)
+        } else {
+            Toast.makeText(this, "No audio to play!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun updatePlayButtonText(audioList: Array<File>){
+        val audioPath = audioList[selectedAudioID].path.split("/")
+        var text = audioPath[audioPath.size-1]
+        text = text.substring(text.indexOf("#"), text.indexOf("_"))
+        findViewById<Button>(R.id.audio_play).text = "Play Recording$text"
+    }
+
+    fun playRecording(v: View) {
+        val contextWrapper = ContextWrapper(applicationContext)
+        if (contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)?.list()?.isNotEmpty() == true){
             mediaPlayer = MediaPlayer()
-            var audioList = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!
-            mediaPlayer.setDataSource(audioList[audioList.size-1].path)
+            val audioList = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).listFiles()!!
+            mediaPlayer.setDataSource(audioList[selectedAudioID].path)
             mediaPlayer.prepare()
             mediaPlayer.start()
             Toast.makeText(this, "Playing audio!", Toast.LENGTH_SHORT).show()
@@ -109,34 +148,34 @@ class AudioActivity : AppCompatActivity() {
     }
 
     fun displayRecordedAudio(v: View){
-        val contextWrapper: ContextWrapper = ContextWrapper(applicationContext)
+        val contextWrapper = ContextWrapper(applicationContext)
         val files = File(contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.path).list()
-        val a = ArrayAdapter(this, android.R.layout.simple_list_item_1, files)
+        val a = files?.let { ArrayAdapter(this, android.R.layout.simple_list_item_1, it) }
         val listView = findViewById<ListView>(R.id.audioDisplay)
-        listView.setAdapter(a)
+        listView.adapter = a
     }
 
     private fun checkMicrophone(): Boolean{
         if(this.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)){
-            return true;
+            return true
         }
-        return false;
+        return false
     }
 
     private fun getMicPermission() {
         if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.RECORD_AUDIO), MICROPHONE_PERMISION_CODE)
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.RECORD_AUDIO), microphonePermissionCode)
         }
     }
 
-    fun getRecordingFilePath(): String{
+    private fun getRecordingFilePath(): String{
         val sp = getSharedPreferences("PREFERENCE_NAME", Context.MODE_PRIVATE)
-        var editor = sp.edit()
+        val editor = sp.edit()
         editor.putInt("fileID", sp.getInt("fileID", 0) + 1)
         val contextWrapper = ContextWrapper(applicationContext)
         val musicDirectory: File = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!
-        val file = File(musicDirectory, "testRecordingFile" + sp.getInt("fileID", 0) + ".mp3" )
-        editor.commit()
+        val file = File(musicDirectory, "audioFile#" + sp.getInt("fileID", 0) + "_.mp3" )
+        editor.apply()
         return file.path
     }
 }
